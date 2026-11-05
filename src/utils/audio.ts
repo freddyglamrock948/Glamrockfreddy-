@@ -1,15 +1,23 @@
 /**
- * Glamrock Freddy Web Audio Synthesizer
- * Generates authentic 80s Pizzaplex arcade sound effects, robotic jumpscares, and synth soundtracks
- * without external audio dependencies.
+ * Glamrock Freddy Audio Engine
+ * Supports real MP3 playback for Rockstar Row, Voice Greetings, and Lockdown Announcements,
+ * plus Web Audio synthesizers for glitch/action SFX and real-time frequency visualization.
  */
+
+export const AUDIO_ASSETS = {
+  greeting: '/assets/aistudio/glamrock_freddy_f8731803.mp3',
+  lockdown: '/assets/aistudio/glamrock-freddy_53d55e6e.mp3',
+  rockstarRow: '/assets/aistudio/04_Rockstar_Row_849df7a1.mp3'
+};
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
-  private currentTrackNodes: { stop: () => void } | null = null;
   public analyser: AnalyserNode | null = null;
   public isPlayingMusic: boolean = false;
   public currentTrackName: string | null = null;
+  private currentAudioElement: HTMLAudioElement | null = null;
+  private synthNodes: { stop: () => void } | null = null;
+  private mediaSourceMap = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
 
   private init() {
     if (!this.ctx) {
@@ -23,12 +31,170 @@ class SoundEngine {
     }
   }
 
-  // Visualizer frequency data
   public getByteFrequencyData(): Uint8Array {
     if (!this.analyser) return new Uint8Array(32);
     const data = new Uint8Array(this.analyser.frequencyBinCount);
     this.analyser.getByteFrequencyData(data);
     return data;
+  }
+
+  // Play real audio clips (Voice greeting or Lockdown announcement)
+  public playClip(url: string, onEnded?: () => void) {
+    this.init();
+    if (this.currentAudioElement) {
+      this.currentAudioElement.pause();
+      this.currentAudioElement = null;
+    }
+
+    const audio = new Audio(url);
+    this.currentAudioElement = audio;
+
+    // Connect audio to analyser if context exists
+    if (this.ctx && this.analyser) {
+      try {
+        let source: MediaElementAudioSourceNode;
+        if (this.mediaSourceMap.has(audio)) {
+          source = this.mediaSourceMap.get(audio)!;
+        } else {
+          source = this.ctx.createMediaElementSource(audio);
+          this.mediaSourceMap.set(audio, source);
+        }
+        source.connect(this.analyser);
+        this.analyser.connect(this.ctx.destination);
+      } catch (e) {
+        // Fallback to direct element playback
+      }
+    }
+
+    audio.play().catch(() => {});
+    audio.onended = () => {
+      if (this.currentAudioElement === audio) {
+        this.currentAudioElement = null;
+      }
+      onEnded?.();
+    };
+  }
+
+  public playGreeting() {
+    this.playClip(AUDIO_ASSETS.greeting);
+  }
+
+  public playLockdown() {
+    this.playClip(AUDIO_ASSETS.lockdown);
+  }
+
+  // Play soundtrack (Rockstar Row uses authentic high-res MP3; others use synth)
+  public playMusic(track: 'rockstar' | 'happy' | 'jam', volume = 0.8) {
+    this.init();
+    this.stopMusic();
+
+    this.isPlayingMusic = true;
+
+    if (track === 'rockstar') {
+      this.currentTrackName = 'Rockstar Row (Original)';
+      const audio = new Audio(AUDIO_ASSETS.rockstarRow);
+      audio.volume = Math.min(Math.max(volume, 0), 1);
+      this.currentAudioElement = audio;
+
+      if (this.ctx && this.analyser) {
+        try {
+          const source = this.ctx.createMediaElementSource(audio);
+          source.connect(this.analyser);
+          this.analyser.connect(this.ctx.destination);
+        } catch {
+          // Fallback direct audio
+        }
+      }
+
+      audio.play().catch(() => {});
+      audio.onended = () => {
+        this.isPlayingMusic = false;
+        this.currentTrackName = null;
+      };
+      return;
+    }
+
+    // Synth tracks for other choices
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    this.currentTrackName = track === 'happy' ? 'Happy (True) Ending' : 'Pizzaplex Neon Jam';
+
+    let isStopped = false;
+    const timers: number[] = [];
+
+    const notes: Record<string, number> = {
+      C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00,
+      C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00,
+      C5: 523.25, D5: 587.33, E5: 659.25
+    };
+
+    const playNote = (freq: number, duration: number, type: OscillatorType = 'sawtooth', vol = 0.08) => {
+      if (isStopped || !this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(vol * volume, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+      osc.connect(gain);
+      if (this.analyser) gain.connect(this.analyser);
+      gain.connect(this.ctx.destination);
+
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    };
+
+    if (track === 'happy') {
+      const melody = [notes.C4, notes.E4, notes.G4, notes.A4, notes.G4, notes.E4, notes.F4, notes.D4];
+      let step = 0;
+      const t = window.setInterval(() => {
+        if (isStopped) return;
+        const m = melody[step % melody.length];
+        playNote(m, 0.4, 'sine', 0.14);
+        if (step % 4 === 0) playNote(notes.C3, 0.8, 'triangle', 0.15);
+        step++;
+      }, 260);
+      timers.push(t);
+    } else {
+      const chords = [notes.D4, notes.F4, notes.A4, notes.C5];
+      let step = 0;
+      const t = window.setInterval(() => {
+        if (isStopped) return;
+        const n = chords[step % chords.length];
+        playNote(n, 0.2, 'square', 0.05);
+        if (step % 2 === 0) playNote(notes.D3, 0.25, 'sawtooth', 0.09);
+        step++;
+      }, 180);
+      timers.push(t);
+    }
+
+    this.synthNodes = {
+      stop: () => {
+        isStopped = true;
+        timers.forEach((t) => clearInterval(t));
+      }
+    };
+  }
+
+  public setVolume(volPercent: number) {
+    const val = Math.min(Math.max(volPercent / 100, 0), 1);
+    if (this.currentAudioElement) {
+      this.currentAudioElement.volume = val;
+    }
+  }
+
+  public stopMusic() {
+    if (this.currentAudioElement) {
+      this.currentAudioElement.pause();
+      this.currentAudioElement = null;
+    }
+    if (this.synthNodes) {
+      this.synthNodes.stop();
+      this.synthNodes = null;
+    }
+    this.isPlayingMusic = false;
+    this.currentTrackName = null;
   }
 
   // Play sound effects by action name
@@ -40,8 +206,18 @@ class SoundEngine {
     const now = ctx.currentTime;
 
     switch (action.toLowerCase()) {
+      case 'lockdown': {
+        this.playLockdown();
+        break;
+      }
+
+      case 'greeting':
+      case 'hello': {
+        this.playGreeting();
+        break;
+      }
+
       case 'reality glitch': {
-        // Frequency sweep with digital noise
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sawtooth';
@@ -63,7 +239,6 @@ class SoundEngine {
       }
 
       case 'teleport': {
-        // High frequency warp sweep into sub bass
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
@@ -83,7 +258,6 @@ class SoundEngine {
       }
 
       case 'solver shield': {
-        // Harmonic protective resonant chime
         [330, 440, 660, 880].forEach((freq, idx) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -103,8 +277,27 @@ class SoundEngine {
         break;
       }
 
+      case 'hug': {
+        // Gentle warm harmonic chime
+        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+          gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now + idx * 0.08);
+          osc.stop(now + 0.5);
+        });
+        break;
+      }
+
       case 'system override': {
-        // 3 urgent warning diagnostic pulses
         for (let i = 0; i < 3; i++) {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -126,7 +319,6 @@ class SoundEngine {
 
       case 'solver jumpscare':
       case 'jumpscare': {
-        // Dramatic shockwave roar & static burst
         const osc = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -156,7 +348,6 @@ class SoundEngine {
       }
 
       case 'roar': {
-        // Deep robotic bear animatronic growl
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sawtooth';
@@ -177,7 +368,6 @@ class SoundEngine {
       }
 
       case 'joke': {
-        // Classic "ba-dum tss" drum rimshot
         // Kick
         const kick = ctx.createOscillator();
         const kickGain = ctx.createGain();
@@ -190,7 +380,7 @@ class SoundEngine {
         kick.start(now);
         kick.stop(now + 0.1);
 
-        // Snare at 0.15s
+        // Snare
         const snare = ctx.createOscillator();
         const snareGain = ctx.createGain();
         snare.type = 'triangle';
@@ -202,7 +392,7 @@ class SoundEngine {
         snare.start(now + 0.15);
         snare.stop(now + 0.25);
 
-        // Crash cymbal at 0.3s
+        // Crash
         const cymbal = ctx.createOscillator();
         const cymbalGain = ctx.createGain();
         cymbal.type = 'sawtooth';
@@ -217,7 +407,6 @@ class SoundEngine {
       }
 
       default: {
-        // Gentle beep
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
@@ -230,105 +419,6 @@ class SoundEngine {
         osc.stop(now + 0.12);
       }
     }
-  }
-
-  // 80s Synth Music Tracks
-  public playMusic(track: 'rockstar' | 'happy' | 'jam') {
-    this.init();
-    this.stopMusic();
-    if (!this.ctx) return;
-
-    const ctx = this.ctx;
-    this.isPlayingMusic = true;
-    this.currentTrackName = track === 'rockstar' ? 'Rockstar Row' : track === 'happy' ? 'Happy (True) Ending' : 'Pizzaplex Neon Jam';
-
-    let isStopped = false;
-    const intervalTimer: number[] = [];
-
-    // Scale notes in Hz
-    const notes: Record<string, number> = {
-      C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, B3: 246.94,
-      C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, B4: 493.88,
-      C5: 523.25, D5: 587.33, E5: 659.25
-    };
-
-    const playNote = (freq: number, duration: number, type: OscillatorType = 'sawtooth', volume = 0.08) => {
-      if (isStopped || !this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-      gain.gain.setValueAtTime(volume, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-
-      osc.connect(gain);
-      if (this.analyser) gain.connect(this.analyser);
-      gain.connect(this.ctx.destination);
-
-      osc.start();
-      osc.stop(this.ctx.currentTime + duration);
-    };
-
-    if (track === 'rockstar') {
-      // Fast, driving 80s glam rock arpeggios
-      const bassline = [notes.A3, notes.A3, notes.C4, notes.D4, notes.E4, notes.D4, notes.C4, notes.G3];
-      const lead = [notes.E4, notes.A4, notes.C5, notes.B4, notes.A4, notes.E4, notes.G4, notes.A4];
-      let step = 0;
-
-      const timer = window.setInterval(() => {
-        if (isStopped) return;
-        const b = bassline[step % bassline.length];
-        const l = lead[step % lead.length];
-        playNote(b, 0.22, 'triangle', 0.12);
-        if (step % 2 === 0) {
-          playNote(l, 0.35, 'sawtooth', 0.07);
-        }
-        step++;
-      }, 160);
-      intervalTimer.push(timer);
-    } else if (track === 'happy') {
-      // Warm, melodic synth anthem
-      const melody = [notes.C4, notes.E4, notes.G4, notes.A4, notes.G4, notes.E4, notes.F4, notes.D4];
-      let step = 0;
-      const timer = window.setInterval(() => {
-        if (isStopped) return;
-        const m = melody[step % melody.length];
-        playNote(m, 0.38, 'sine', 0.14);
-        if (step % 4 === 0) {
-          playNote(notes.C3, 0.8, 'triangle', 0.15);
-        }
-        step++;
-      }, 260);
-      intervalTimer.push(timer);
-    } else {
-      // Funk Pizzaplex Jam
-      const chords = [notes.D4, notes.F4, notes.A4, notes.C5];
-      let step = 0;
-      const timer = window.setInterval(() => {
-        if (isStopped) return;
-        const n = chords[step % chords.length];
-        playNote(n, 0.18, 'square', 0.05);
-        if (step % 2 === 0) playNote(notes.D3, 0.25, 'sawtooth', 0.09);
-        step++;
-      }, 180);
-      intervalTimer.push(timer);
-    }
-
-    this.currentTrackNodes = {
-      stop: () => {
-        isStopped = true;
-        intervalTimer.forEach((t) => clearInterval(t));
-      }
-    };
-  }
-
-  public stopMusic() {
-    if (this.currentTrackNodes) {
-      this.currentTrackNodes.stop();
-      this.currentTrackNodes = null;
-    }
-    this.isPlayingMusic = false;
-    this.currentTrackName = null;
   }
 }
 

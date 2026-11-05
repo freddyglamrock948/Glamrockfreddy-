@@ -1,3 +1,4 @@
+import http from 'http';
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -89,14 +90,24 @@ app.post('/api/chat', async (req: Request, res: Response) => {
   // Pre-configured character responses if bot bridge isn't connected
   const lower = message.toLowerCase();
   let reply = "Way to go, Superstar! You are doing fantastic! 🐻🎸";
-  if (lower.includes("hello") || lower.includes("hi")) {
+  if (lower.includes("cyn") || lower.includes("daughter")) {
+    reply = "Cyn is my daughter, Superstar. She may be unusual, but I care about her and want her to be safe. 💛";
+  } else if (lower.includes("gregory") || lower.includes("son")) {
+    reply = "Gregory is my son, Superstar. I will always look out for him and help keep him safe.";
+  } else if (lower.includes("family") || lower.includes("children")) {
+    reply = "Gregory and Cyn are my children. Family means looking after one another, Superstar.";
+  } else if (lower.includes("hug")) {
+    reply = "A big bear hug for you, Superstar! You are my friend. 🫂";
+  } else if (lower.includes("roast")) {
+    reply = "🔥 You have the stealth skills of a marching band, Superstar.";
+  } else if (lower.includes("hello") || lower.includes("hi")) {
     reply = "Hello, Superstar! Glamrock Freddy reporting for duty at the Pizzaplex. How can I help you today?";
   } else if (lower.includes("solver")) {
     reply = "🔻 Absolute Solver alert! My optical feeds detected high-frequency anomaly signals. Stand behind me, Superstar!";
   } else if (lower.includes("who are you")) {
     reply = "I am Glamrock Freddy! Frontman of the Pizzaplex band and your personal protector.";
   } else if (lower.includes("joke")) {
-    reply = "Why did Montgomery Gator join the golf club? Because he had an alligator-sized swing! Haha!";
+    reply = "Why did the animatronic bring a guitar? To make some byte-sized music!";
   }
 
   await forwardToBot(req, res, '/api/chat', {
@@ -115,22 +126,30 @@ app.post('/api/action', async (req: Request, res: Response) => {
 
   let reply = `Action '${action}' executed successfully.`;
   const act = String(action).toLowerCase();
-  if (act === 'reality glitch') {
-    reply = "🔻 [SOLVER GLITCH] Reality matrix corrupted! Temporal anchor desynced.";
+  if (act === 'lockdown') {
+    reply = "🚨 [LOCKDOWN ACTIVATED] 'Freddy, you're supposed to be on lockdown! / SHUT YOUR MOUTH, I'M LISTENING TO MUSIC!'";
+  } else if (act === 'greeting' || act === 'hello') {
+    reply = "🐻🎙️ [FREDDY VOICE GREETING] 'Way to go, superstar! I knew you could do it.'";
+  } else if (act === 'hug') {
+    reply = "🫂 [BEAR HUG] Freddy wraps you in a warm, protective bear hug! (+1 Friendship Point)";
+  } else if (act === 'roast') {
+    reply = "🔥 [PLAYFUL ROAST] You have the stealth skills of a marching band, Superstar.";
+  } else if (act === 'reality glitch') {
+    reply = "🟥 [REALITY GLITCH] The room flickers. Freddy’s eyes flash red, orange, and blue as reality briefly distorts.";
   } else if (act === 'teleport') {
-    reply = "✨ [WARP DISPLACEMENT] Phase-shifting complete! Freddy rematerialized at the Stage Door.";
+    reply = "🌀 [SOLVER TELEPORT] A burst of Solver symbols—and Freddy instantly appears beside you: 'I’m right here, Superstar!'";
   } else if (act === 'solver shield') {
-    reply = "🛡️ [SOLVER SHIELD] Absolute Solver hex-barrier deployed! Damage deflected.";
+    reply = "🛡️ [SOLVER SHIELD] A glowing Solver barrier surrounds Freddy and his friends: 'Nobody gets past this shield!'";
   } else if (act === 'system override') {
-    reply = "⚠️ [SYSTEM OVERRIDE] Fazbear firmware bypassed! Safe-mode unlocked.";
+    reply = "⚠️ [SYSTEM OVERRIDE] Freddy’s systems display: OVERRIDE ACCEPTED. The Solver takes control of the nearby security interface.";
   } else if (act === 'solver jumpscare') {
-    reply = "💥 [STATIC HORROR] THE ABSOLUTE SOLVER OVERTAKES FREDDY'S OPTICS! *Screeeeech!*";
+    reply = "🔺 [SOLVER JUMPSCARE] **BOO!!!** Freddy’s eyes flash with Solver symbols: 'SURPRISE, SUPERSTAR!'";
   } else if (act === 'jumpscare') {
-    reply = "🐻💥 *LOUD ANIMATRONIC JUMPSCARE ROAR* ...Did I scare you, Superstar?";
+    reply = "⚠️ [SECURITY ALERT ⚠️] **BOO!!!** WAAAAAAAHHHHH!!! SURPRISE, SUPERSTAR! 🐻";
   } else if (act === 'roar') {
-    reply = "🔊 *MASSIVE BASS ROAR* RRRRRRAAAWWWWRRR! The crowd in Rockstar Row goes wild!";
+    reply = "🐻🎸 FREDDY ROAR! ROOOOOAAARRR!!! WELCOME TO THE PIZZAPLEX, SUPERSTAR!";
   } else if (act === 'joke') {
-    reply = "🐻 What does Chica order at the bakery? A rock-and-roll cupcake with extra glam!";
+    reply = "😄 Why did Montgomery Gator join the golf club? Because he had an alligator-sized swing! Haha!";
   }
 
   await forwardToBot(req, res, '/api/action', {
@@ -284,10 +303,12 @@ app.get('/auth/discord/callback', async (req: Request, res: Response) => {
     });
     const userData = await userRes.json();
 
-    const isOwner = Boolean(
-      process.env.OWNER_DISCORD_ID &&
-      String(userData.id) === String(process.env.OWNER_DISCORD_ID)
+    const configuredOwners = new Set(
+      (process.env.DISCORD_OWNER_IDS || process.env.OWNER_DISCORD_ID || '1411436991005851832,1552785126033858650')
+        .split(',')
+        .map((s) => s.trim())
     );
+    const isOwner = configuredOwners.has(String(userData.id));
 
     // Redirect to dashboard with identity hash
     const userPayload = encodeURIComponent(JSON.stringify({
@@ -305,8 +326,11 @@ app.get('/auth/discord/callback', async (req: Request, res: Response) => {
   }
 });
 
+
 // Vite or Static Serving
 async function startServer() {
+  const httpServer = http.createServer(app);
+
   if (IS_PROD) {
     const distPath = path.resolve('dist');
     app.use(express.static(distPath));
@@ -315,13 +339,18 @@ async function startServer() {
     });
   } else {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: {
+          server: httpServer
+        }
+      },
       appType: 'spa'
     });
     app.use(vite.middlewares);
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`[Freddy Web] Server running at http://0.0.0.0:${PORT}`);
   });
 }

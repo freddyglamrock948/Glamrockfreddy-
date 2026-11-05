@@ -1,26 +1,31 @@
 import React from 'react';
 import { UserSession } from '../utils/freddyBot';
-import { LogIn, LogOut, ShieldCheck, User } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck, Volume2, AlertOctagon } from 'lucide-react';
+import { soundEngine } from '../utils/audio';
 
 interface NavbarProps {
   user: UserSession | null;
   activeTab: string;
+  friendshipPoints: number;
+  friendshipLevel: string;
   onTabChange: (tab: string) => void;
   onLoginClick: () => void;
   onLogoutClick: () => void;
-  onSimulateOwner: () => void;
+  onSimulateOwner: (variant?: 'main' | 'alt') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   user,
   activeTab,
+  friendshipPoints,
+  friendshipLevel,
   onTabChange,
   onLoginClick,
   onLogoutClick,
   onSimulateOwner
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-[#090d16]/90 backdrop-blur-md border-b border-[#ffffff15] px-6 py-4 flex items-center justify-between gap-8 transition-colors">
+    <header className="sticky top-0 z-40 bg-[#090d16]/90 backdrop-blur-md border-b border-[#ffffff15] px-6 py-3.5 flex items-center justify-between gap-8 transition-colors">
       {/* Zone 1: Single Text Element Wordmark */}
       <button
         onClick={() => onTabChange('hero')}
@@ -30,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       </button>
 
       {/* Zone 2: 5 Concise Single-line Navigation Links */}
-      <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-[#aab6c9]">
+      <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-[#aab6c9]">
         <button
           onClick={() => onTabChange('settings')}
           className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
@@ -77,26 +82,56 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
       </nav>
 
-      {/* Zone 3: 1 Primary Action */}
+      {/* Zone 3: 1 Primary Action Area */}
       <div className="flex items-center gap-3 shrink-0">
+        {/* Quick audio triggers */}
+        <div className="hidden xl:flex items-center gap-1.5 border-r border-white/10 pr-3">
+          <button
+            onClick={() => soundEngine.playGreeting()}
+            title="Play authentic Freddy voice greeting: 'Way to go, superstar!'"
+            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white/5 hover:bg-[#53e7ff]/20 text-[#53e7ff] transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <Volume2 className="w-3.5 h-3.5 text-[#53e7ff]" />
+            <span>Greeting</span>
+          </button>
+
+          <button
+            onClick={() => soundEngine.playLockdown()}
+            title="Play authentic Lockdown audio: 'Shut your mouth! I'm listening to music!'"
+            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-300 transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <AlertOctagon className="w-3.5 h-3.5 text-rose-400" />
+            <span>Lockdown</span>
+          </button>
+        </div>
+
         {user ? (
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-right">
-              {user.isOwner && (
-                <span className="text-xs text-[#ff9b45] font-bold flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Owner
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:flex flex-col text-right">
+              <div className="flex items-center justify-end gap-1.5">
+                {user.isOwner && (
+                  <button
+                    onClick={() => onSimulateOwner(user.id === '1411436991005851832' ? 'alt' : 'main')}
+                    title="Click to toggle between Main Owner and Alt Owner"
+                    className="text-[11px] text-[#ff9b45] font-bold flex items-center gap-0.5 hover:underline cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>{user.id === '1411436991005851832' ? 'Owner (Main)' : 'Owner (Alt)'}</span>
+                  </button>
+                )}
+                <span className="text-xs font-semibold text-white truncate max-w-[110px]">
+                  {user.global_name}
                 </span>
-              )}
-              <span className="text-xs font-semibold text-white truncate max-w-[120px]">
-                {user.global_name}
+              </div>
+              <span className="text-[10px] text-[#7d8b9f]">
+                {friendshipPoints} pts · {friendshipLevel}
               </span>
             </div>
 
             <button
               onClick={onLogoutClick}
               title="Log out"
-              className="px-3.5 py-1.5 text-xs font-bold text-[#aab6c9] hover:text-white border border-[#ffffff20] hover:border-[#ffffff40] rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              className="px-3 py-1.5 text-xs font-bold text-[#aab6c9] hover:text-white border border-[#ffffff20] hover:border-[#ffffff40] rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Log out</span>
@@ -105,9 +140,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         ) : (
           <div className="flex items-center gap-2">
             <button
-              onClick={onSimulateOwner}
+              onClick={() => onSimulateOwner('main')}
               title="Test the dashboard right now without Discord credentials"
-              className="hidden sm:inline-flex px-3 py-1.5 text-xs font-bold text-[#53e7ff] border border-[#53e7ff]/40 hover:bg-[#53e7ff]/10 rounded-xl transition-colors whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex px-3 py-1.5 text-xs font-bold text-[#53e7ff] border border-[#53e7ff]/40 hover:bg-[#53e7ff]/10 rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Demo Sign In
             </button>

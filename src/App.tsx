@@ -8,12 +8,14 @@ import { MusicVoiceControls } from './components/MusicVoiceControls';
 import { ServerBotBridge } from './components/ServerBotBridge';
 import {
   DEFAULT_SETTINGS,
+  DEFAULT_OWNERS,
   DEFAULT_OWNER,
   FreddySettings,
-  UserSession
+  UserSession,
+  getFriendshipLevel
 } from './utils/freddyBot';
 import { soundEngine } from './utils/audio';
-import { Sparkles, Shield, UserCheck, AlertTriangle, X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState<UserSession | null>(() => {
@@ -25,7 +27,7 @@ export default function App() {
         return null;
       }
     }
-    // Default to owner simulation so the user can immediately play with the dashboard!
+    // Default to main owner simulation
     return DEFAULT_OWNER;
   });
 
@@ -39,6 +41,11 @@ export default function App() {
       }
     }
     return DEFAULT_SETTINGS;
+  });
+
+  const [friendshipPoints, setFriendshipPoints] = useState<number>(() => {
+    const saved = localStorage.getItem('freddy_friendship_points');
+    return saved ? Math.max(0, parseInt(saved, 10) || 0) : 3;
   });
 
   const [activeTab, setActiveTab] = useState<string>('hero');
@@ -103,9 +110,16 @@ export default function App() {
       });
       return res.ok;
     } catch {
-      // In offline mode, localStorage persistence still succeeds
       return true;
     }
+  };
+
+  const handleAddFriendshipPoint = () => {
+    setFriendshipPoints((prev) => {
+      const updated = prev + 1;
+      localStorage.setItem('freddy_friendship_points', updated.toString());
+      return updated;
+    });
   };
 
   const handleTriggerGlitch = () => {
@@ -114,7 +128,6 @@ export default function App() {
   };
 
   const handleLoginClick = () => {
-    // Redirect to real Discord OAuth endpoint
     window.location.href = '/auth/discord';
   };
 
@@ -125,13 +138,15 @@ export default function App() {
     setBannerNotice("Logged out of Discord session.");
   };
 
-  const handleSimulateOwner = () => {
-    setUser(DEFAULT_OWNER);
-    localStorage.setItem('freddy_user', JSON.stringify(DEFAULT_OWNER));
-    setActiveTab('settings');
+  const handleSimulateOwner = (variant: 'main' | 'alt' = 'main') => {
+    const selected = variant === 'alt' ? DEFAULT_OWNERS.alt : DEFAULT_OWNERS.main;
+    setUser(selected);
+    localStorage.setItem('freddy_user', JSON.stringify(selected));
     soundEngine.playActionSound('default');
-    setBannerNotice("Switched to Bot Owner Demo session (Full administrative access).");
+    setBannerNotice(`Active Owner: ${selected.global_name} (${selected.id})`);
   };
+
+  const friendshipLevel = getFriendshipLevel(friendshipPoints);
 
   return (
     <div className={`min-h-screen flex flex-col transition-all ${isGlitching ? 'glitch-active' : ''}`}>
@@ -160,6 +175,8 @@ export default function App() {
       <Navbar
         user={user}
         activeTab={activeTab}
+        friendshipPoints={friendshipPoints}
+        friendshipLevel={friendshipLevel}
         onTabChange={setActiveTab}
         onLoginClick={handleLoginClick}
         onLogoutClick={handleLogout}
@@ -172,7 +189,7 @@ export default function App() {
           <Hero
             onOpenDashboard={() => setActiveTab('settings')}
             onLoginClick={handleLoginClick}
-            onSimulateOwner={handleSimulateOwner}
+            onSimulateOwner={() => handleSimulateOwner('main')}
             isLoggedIn={Boolean(user)}
           />
         )}
@@ -185,11 +202,17 @@ export default function App() {
         )}
 
         {activeTab === 'chat' && (
-          <FreddyChat />
+          <FreddyChat
+            friendshipPoints={friendshipPoints}
+            onAddFriendshipPoint={handleAddFriendshipPoint}
+          />
         )}
 
         {activeTab === 'solver' && (
-          <SolverAndScares onTriggerGlitch={handleTriggerGlitch} />
+          <SolverAndScares
+            onTriggerGlitch={handleTriggerGlitch}
+            onAddFriendshipPoint={handleAddFriendshipPoint}
+          />
         )}
 
         {activeTab === 'music' && (
@@ -201,7 +224,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Anti-Slop Clean Footer */}
+      {/* Clean Footer */}
       <footer className="border-t border-white/10 py-8 bg-[#090d16]/80 text-xs text-[#7d8b9f]">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="space-y-1">

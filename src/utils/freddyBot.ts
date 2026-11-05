@@ -16,6 +16,29 @@ export interface UserSession {
   role: 'owner' | 'member' | 'guest';
 }
 
+export const OWNER_IDS = ['1411436991005851832', '1552785126033858650'];
+
+export const DEFAULT_OWNERS: Record<string, UserSession> = {
+  main: {
+    id: "1411436991005851832",
+    username: "pizzaplex_captain",
+    global_name: "Superstar Captain (Main Owner)",
+    avatar: null,
+    isOwner: true,
+    role: 'owner',
+  },
+  alt: {
+    id: "1552785126033858650",
+    username: "fazbear_director",
+    global_name: "Fazbear Director (Alt Owner)",
+    avatar: null,
+    isOwner: true,
+    role: 'owner',
+  }
+};
+
+export const DEFAULT_OWNER = DEFAULT_OWNERS.main;
+
 export const DEFAULT_SETTINGS: FreddySettings = {
   welcomeMessage: "🐻🎸 Welcome to the Pizzaplex, {user}! I’m Glamrock Freddy. Stay safe, Superstar!",
   welcomeChannel: "948123456789012345",
@@ -25,102 +48,159 @@ export const DEFAULT_SETTINGS: FreddySettings = {
   goodbyeImage: "/src/assets/images/pizzaplex_stage_neon_1793907790277.jpg",
 };
 
-export const DEFAULT_OWNER: UserSession = {
-  id: "1411436991005851832",
-  username: "pizzaplex_captain",
-  global_name: "Superstar Captain",
-  avatar: null,
-  isOwner: true,
-  role: 'owner',
-};
-
-export const FREDDY_QUOTES = [
-  "Way to go, Superstar! You are doing great!",
-  "I am Glamrock Freddy! Lead singer of the Fazbear band.",
-  "Gregory, do you see that small vent on the floor? Have you ever heard of Among Us, Gregory?",
-  "I will protect you. My friends may seem angry, but they are just malfunctioning.",
-  "Show time is at 10 PM sharp at the Main Stage!",
-  "I cannot see you, Superstar, but I can hear your microphone loud and clear.",
-  "Did you bring your security pass? Level 7 access granted!",
-  "I feel a strange glitch in my subroutine... Wait, the Absolute Solver is whispering.",
-  "I am programmed to be the finest bear in showbiz!",
-  "If you ever feel lost in the Pizzaplex, find a recharge station and press the call button."
+export const FREDDY_ROASTS = [
+  "You have the stealth skills of a marching band, Superstar.",
+  "Even the STAFF bots saw that coming.",
+  "That plan needs a little more superstar energy.",
+  "Monty called. He said your aim needs practice."
 ];
 
 export const FREDDY_JOKES = [
-  "Why did Montgomery Gator join the golf club? Because he had an alligator-sized swing! Haha!",
-  "What does Chica order at the bakery? A rock-and-roll cupcake with extra glam!",
-  "Why was Roxanne Wolf looking in the mirror all day? Because she's number one, of course!",
-  "How does Sun keep the daycare tidy? By shining light on every mess!",
-  "What is my favorite key on the synthesizer? The 'Bear'-itone chord! A classic!"
+  "Why did the animatronic bring a guitar? To make some byte-sized music!",
+  "What is Freddy's favorite kind of party? A rock-and-roll party!",
+  "Why did I go to the daycare? I wanted to brighten everyone's day!",
+  "Why did Montgomery Gator join the golf club? Because he had an alligator-sized swing! Haha!"
 ];
 
+export const FREDDY_GREETINGS = [
+  "Hello, Superstar! Freddy is here to help!",
+  "You are doing great! Keep going, Superstar!",
+  "Stay safe out there. I am watching over you!"
+];
+
+export const FREDDY_FRIENDLY = [
+  "Of course, Superstar! I am always here to help.",
+  "You can count on me. I will keep you safe.",
+  "That sounds like a great idea! Let us do it together.",
+  "I believe in you, Superstar. You have got this!"
+];
+
+export const ROLEPLAY_SCENES: Record<string, { title: string; text: string }> = {
+  gregory: {
+    title: 'Protect Gregory',
+    text: 'Gregory, I have located you! Stay behind me. We need to get you somewhere safe before the others find us.'
+  },
+  alert: {
+    title: 'Security Alert',
+    text: '⚠️ SECURITY ALERT! Superstar, please remain calm. I am detecting movement nearby. Follow me!'
+  },
+  escape: {
+    title: 'Escape the Pizzaplex',
+    text: 'The doors are almost open, Superstar! Keep moving. We can make it out of the Pizzaplex together!'
+  }
+};
+
+export function getFriendshipLevel(points: number): string {
+  if (points < 5) return 'New Superstar';
+  if (points < 15) return 'Pizzaplex Pal';
+  return "Freddy's Best Friend";
+}
+
 export function getSimulatedChatReply(message: string): string {
-  const m = message.toLowerCase();
-  if (m.includes("hello") || m.includes("hi") || m.includes("hey")) {
-    return "Hello, Superstar! It is so good to see you here in the Pizzaplex. What adventure shall we embark on?";
+  const text = message.toLowerCase();
+
+  // Family Lore
+  if (text.includes("cyn") || text.includes("daughter")) {
+    return "Cyn is my daughter, Superstar. She may be unusual, but I care about her and want her to be safe. 💛";
   }
-  if (m.includes("solver") || m.includes("absolute")) {
-    return "🔻 Absolute Solver detected! My optical feeds are showing strange golden geometric arrays. Do not worry, I will hold the corruption at bay!";
+  if (text.includes("gregory") || text.includes("son")) {
+    return "Gregory is my son, Superstar. I will always look out for him and help keep him safe.";
   }
-  if (m.includes("who are you") || m.includes("freddy")) {
-    return "I am Glamrock Freddy! Your personal guardian animatronic and frontman of the Mega Pizzaplex band. 🐻🎸";
+  if (text.includes("family") || text.includes("children") || text.includes("kids")) {
+    return "Gregory and Cyn are my children. Family means looking after one another, Superstar.";
   }
-  if (m.includes("gregory")) {
-    return "Gregory? Where is he? If you see him, tell him to hide in my chest cavity—it is safe and climate controlled!";
+  if (text.includes("hug") || text.includes("love") || text.includes("friend")) {
+    return "A big bear hug for you, Superstar! You are my friend. 🫂";
   }
-  if (m.includes("music") || m.includes("song") || m.includes("play")) {
-    return "Music is the pulse of the Pizzaplex! Use the Music & Voice panel below to play our greatest hits directly in voice chat.";
+  if (text.includes("scared") || text.includes("afraid") || text.includes("help") || text.includes("danger")) {
+    return "Do not worry, Superstar. Stay close to me. I will protect you!";
   }
-  if (m.includes("joke")) {
+  if (text.includes("where")) {
+    return "I am here, Superstar. Let us check the security cameras and find a safe route.";
+  }
+  if (text.includes("joke") || text.includes("funny")) {
     return FREDDY_JOKES[Math.floor(Math.random() * FREDDY_JOKES.length)];
   }
-  if (m.includes("help") || m.includes("protect")) {
-    return "I will protect you with every ounce of my Fazbear servos. Stay close to me and nothing will hurt you!";
+  if (text.includes("roast")) {
+    return "🔥 " + FREDDY_ROASTS[Math.floor(Math.random() * FREDDY_ROASTS.length)];
   }
-  return FREDDY_QUOTES[Math.floor(Math.random() * FREDDY_QUOTES.length)];
+  if (text.includes("lockdown")) {
+    return "🚨 Freddy: 'Shut your mouth! I'm listening to music!' ...Ahem, pardon my audio glitch, Superstar!";
+  }
+  if (text.includes("solver") || text.includes("absolute")) {
+    return "🔺 Absolute Solver detected! My optical feeds are showing geometric arrays. Do not worry, I will hold the corruption at bay!";
+  }
+  if (text.includes("sing") || text.includes("song")) {
+    return "🎤 Freddy's imaginary concert starts now. Everybody clap, Superstar!";
+  }
+  if (text.includes("hello") || text.includes("hi") || text.includes("hey")) {
+    return FREDDY_GREETINGS[Math.floor(Math.random() * FREDDY_GREETINGS.length)];
+  }
+
+  return FREDDY_FRIENDLY[Math.floor(Math.random() * FREDDY_FRIENDLY.length)];
 }
 
 export function getSimulatedActionReply(action: string): { reply: string; status: 'ok' | 'glitch' | 'danger' } {
   switch (action.toLowerCase()) {
+    case 'lockdown':
+      return {
+        reply: "🚨 [LOCKDOWN ACTIVATED] 'Freddy, you're supposed to be on lockdown! / SHUT YOUR MOUTH, I'M LISTENING TO MUSIC!'",
+        status: 'danger'
+      };
+    case 'greeting':
+    case 'hello':
+      return {
+        reply: "🐻🎙️ [FREDDY VOICE GREETING] 'Way to go, superstar! I knew you could do it.'",
+        status: 'ok'
+      };
+    case 'hug':
+      return {
+        reply: "🫂 [BEAR HUG] Freddy wraps you in a warm, protective bear hug! (+1 Friendship Point)",
+        status: 'ok'
+      };
+    case 'roast':
+      return {
+        reply: "🔥 [PLAYFUL ROAST] " + FREDDY_ROASTS[Math.floor(Math.random() * FREDDY_ROASTS.length)],
+        status: 'ok'
+      };
     case 'reality glitch':
       return {
-        reply: "🔻 [SOLVER GLITCH] Reality matrix corrupted! Temporal anchor desynced. Optical sensors flickering between dimensions.",
+        reply: "🟥 [REALITY GLITCH] The room flickers. Freddy’s eyes flash red, orange, and blue as reality briefly distorts around him.",
         status: 'glitch'
       };
     case 'teleport':
       return {
-        reply: "✨ [WARP DISPLACEMENT] Phase-shifting complete! Freddy vanished in a flash of cyan light and reappeared at the Stage Door.",
+        reply: "🌀 [SOLVER TELEPORT] A burst of Solver symbols—and Freddy instantly appears beside you: 'I’m right here, Superstar!'",
         status: 'ok'
       };
     case 'solver shield':
       return {
-        reply: "🛡️ [SOLVER SHIELD] Absolute Solver hex-barrier deployed! Deflecting all incoming physical and emotional damage for 15 seconds.",
+        reply: "🛡️ [SOLVER SHIELD] A glowing Solver barrier surrounds Freddy and his friends: 'Nobody gets past this shield!'",
         status: 'ok'
       };
     case 'system override':
       return {
-        reply: "⚠️ [SYSTEM OVERRIDE] Fazbear firmware 1.0.8 bypassed! Safe-mode unlocked. All restricted Pizzaplex zones are now accessible.",
+        reply: "⚠️ [SYSTEM OVERRIDE] Freddy’s systems display: OVERRIDE ACCEPTED. The Solver takes control of the nearby security interface.",
         status: 'danger'
       };
     case 'solver jumpscare':
       return {
-        reply: "💥 [STATIC HORROR] THE ABSOLUTE SOLVER OVERTAKES FREDDY'S EYES WITH YELLOW WINGS OF LIGHT! *Screeeeech!*",
+        reply: "🔺 [SOLVER JUMPSCARE] **BOO!!!** Freddy’s eyes flash with Solver symbols: 'SURPRISE, SUPERSTAR!'",
         status: 'glitch'
       };
     case 'jumpscare':
       return {
-        reply: "🐻💥 *LOUD ANIMATRONIC JUMPSCARE ROAR* ...Did I scare you, Superstar? My vocal dampeners must have tripped!",
-        status: 'ok'
+        reply: "⚠️ [SECURITY ALERT JUMPSCARE] **BOO!!!** WAAAAAAAHHHHH!!! SURPRISE, SUPERSTAR! 🐻",
+        status: 'danger'
       };
     case 'joke':
       return {
-        reply: "🐻 " + FREDDY_JOKES[Math.floor(Math.random() * FREDDY_JOKES.length)],
+        reply: "😄 " + FREDDY_JOKES[Math.floor(Math.random() * FREDDY_JOKES.length)],
         status: 'ok'
       };
     case 'roar':
       return {
-        reply: "🔊 *MASSIVE BASS ROAR* RRRRRRAAAWWWWRRR! The crowd in Rockstar Row goes wild!",
+        reply: "🐻🎸 FREDDY ROAR! ROOOOOAAARRR!!! WELCOME TO THE PIZZAPLEX, SUPERSTAR!",
         status: 'ok'
       };
     default:

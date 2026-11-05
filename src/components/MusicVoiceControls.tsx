@@ -10,7 +10,10 @@ import {
   Volume2,
   Disc,
   Radio,
-  Sparkles
+  Sparkles,
+  AlertOctagon,
+  VolumeX,
+  Music
 } from 'lucide-react';
 
 export const MusicVoiceControls: React.FC = () => {
@@ -25,24 +28,27 @@ export const MusicVoiceControls: React.FC = () => {
   const tracks = [
     {
       id: 'rockstar',
-      title: 'Rockstar Row Theme',
-      artist: 'Glamrock Freddy & The Band',
-      duration: '03:14',
-      badge: 'Main Stage'
+      title: '04 Rockstar Row (Original Soundtrack)',
+      artist: 'Glamrock Freddy & The Fazbear Band',
+      duration: '02:59',
+      badge: 'Official MP3',
+      isOfficial: true
     },
     {
       id: 'happy',
       title: 'Happy (True) Ending',
       artist: 'Fazbear Entertainment OST',
       duration: '02:48',
-      badge: 'Vocal Synth'
+      badge: 'Vocal Synth',
+      isOfficial: false
     },
     {
       id: 'jam',
       title: 'Pizzaplex Neon Jam',
       artist: 'Arcade Concourse Live',
       duration: '03:30',
-      badge: '80s Synthwave'
+      badge: '80s Synthwave',
+      isOfficial: false
     }
   ];
 
@@ -63,7 +69,6 @@ export const MusicVoiceControls: React.FC = () => {
 
       for (let i = 0; i < numBars; i++) {
         let barHeight = (data[i] || 0) / 255 * (canvas.height - 10);
-        // Add minimal idle pulsation when playing
         if (isPlaying && barHeight < 6) {
           barHeight = 6 + Math.sin(Date.now() / 150 + i) * 4;
         }
@@ -71,7 +76,6 @@ export const MusicVoiceControls: React.FC = () => {
         const x = i * (barWidth + 2);
         const y = canvas.height - barHeight;
 
-        // Gradient from cyan to orange
         const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
         gradient.addColorStop(0, '#53e7ff');
         gradient.addColorStop(1, '#ff9b45');
@@ -104,7 +108,7 @@ export const MusicVoiceControls: React.FC = () => {
     if (action === 'join') {
       setIsVoiceConnected(true);
       setMusicStatus("Freddy joined the voice channel! Voice broadcast ready.");
-      soundEngine.playActionSound('default');
+      soundEngine.playGreeting();
     } else if (action === 'leave') {
       setIsVoiceConnected(false);
       setIsPlaying(false);
@@ -116,7 +120,7 @@ export const MusicVoiceControls: React.FC = () => {
       setCurrentTrack(trackId);
       setIsPlaying(true);
       setIsVoiceConnected(true);
-      soundEngine.playMusic(trackId);
+      soundEngine.playMusic(trackId, volume / 100);
       setMusicStatus(`Now playing: ${tracks.find(t => t.id === trackId)?.title} in Discord voice! 🎸`);
     } else if (action === 'pause') {
       setIsPlaying(false);
@@ -124,7 +128,7 @@ export const MusicVoiceControls: React.FC = () => {
       setMusicStatus("Playback paused.");
     } else if (action === 'resume') {
       setIsPlaying(true);
-      soundEngine.playMusic(currentTrack);
+      soundEngine.playMusic(currentTrack, volume / 100);
       setMusicStatus("Playback resumed.");
     } else if (action === 'stop') {
       setIsPlaying(false);
@@ -135,9 +139,14 @@ export const MusicVoiceControls: React.FC = () => {
       const nextTrack = tracks[nextIndex].id as 'rockstar' | 'happy' | 'jam';
       setCurrentTrack(nextTrack);
       setIsPlaying(true);
-      soundEngine.playMusic(nextTrack);
+      soundEngine.playMusic(nextTrack, volume / 100);
       setMusicStatus(`Skipped to: ${tracks[nextIndex].title}`);
     }
+  };
+
+  const handleVolumeChange = (newVol: number) => {
+    setVolume(newVol);
+    soundEngine.setVolume(newVol);
   };
 
   return (
@@ -149,11 +158,33 @@ export const MusicVoiceControls: React.FC = () => {
             <span>🎵 Music & Voice Controls</span>
           </h2>
           <p className="text-xs text-[#aab6c9] mt-1">
-            Dispatch soundtrack playback and vocal announcements to Freddy in your configured Discord voice channel.
+            Dispatch official soundtrack streams, security lockdown broadcasts, and voice announcements to Freddy.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => {
+              soundEngine.playGreeting();
+              setMusicStatus("Playing Freddy's voice greeting clip: 'Way to go, superstar!'");
+            }}
+            className="px-3 py-2 text-xs font-bold rounded-xl bg-[#53e7ff]/15 hover:bg-[#53e7ff]/25 text-[#53e7ff] border border-[#53e7ff]/30 transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <Disc className="w-3.5 h-3.5" />
+            <span>Voice Greeting</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundEngine.playLockdown();
+              setMusicStatus("🚨 Lockdown Audio Triggered: 'Shut your mouth, I'm listening to music!'");
+            }}
+            className="px-3 py-2 text-xs font-bold rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <AlertOctagon className="w-3.5 h-3.5 text-rose-400" />
+            <span>Lockdown Audio</span>
+          </button>
+
           <button
             onClick={() => handleAction(isVoiceConnected ? 'leave' : 'join')}
             className={`px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-all cursor-pointer ${
@@ -183,7 +214,7 @@ export const MusicVoiceControls: React.FC = () => {
         <div className="lg:col-span-6 space-y-3">
           <h3 className="text-sm font-bold text-white mb-2 flex items-center justify-between">
             <span>Pizzaplex Soundtracks</span>
-            <span className="text-xs text-[#7d8b9f]">Web Audio & Voice Stream</span>
+            <span className="text-xs text-[#7d8b9f]">Real MP3 & Synth Engine</span>
           </h3>
 
           <div className="space-y-2.5">
@@ -224,7 +255,11 @@ export const MusicVoiceControls: React.FC = () => {
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="text-[10px] font-mono text-[#53e7ff] bg-[#53e7ff]/10 px-2 py-0.5 rounded border border-[#53e7ff]/20">
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                      track.isOfficial
+                        ? 'bg-[#ff9b45]/20 text-[#ff9b45] border-[#ff9b45]/30 font-bold'
+                        : 'bg-[#53e7ff]/10 text-[#53e7ff] border-[#53e7ff]/20'
+                    }`}>
                       {track.badge}
                     </span>
                     <div className="text-[11px] text-[#7d8b9f] font-mono tabular-nums mt-1">
@@ -240,10 +275,10 @@ export const MusicVoiceControls: React.FC = () => {
           <div className="p-4 bg-[#0a1220] border border-white/10 rounded-xl space-y-2">
             <span className="text-xs font-bold text-[#ff9b45] flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5" />
-              <span>Voice Channel Integration</span>
+              <span>Voice Channel Integration & Lockdown Audio</span>
             </span>
             <p className="text-xs text-[#aab6c9] leading-relaxed">
-              When Freddy is invited to your Discord server and in a voice room, you can trigger these soundtracks directly from this dashboard or via the <code>/music [song]</code> slash command.
+              When Freddy is invited to your Discord server, use <code>/freddy lockdown</code> to play the security lockdown announcement, or <code>/play rockstar</code> to stream the authentic Rockstar Row soundtrack into your voice channel.
             </p>
           </div>
         </div>
@@ -259,7 +294,7 @@ export const MusicVoiceControls: React.FC = () => {
                   SPECTROGRAM
                 </span>
                 <span className="text-[11px] font-mono text-[#ff9b45]">
-                  {isPlaying ? 'STREAMING ACTIVE' : 'STANDBY'}
+                  {isPlaying ? 'AUDIO BROADCASTING' : 'STANDBY'}
                 </span>
               </div>
 
@@ -324,7 +359,7 @@ export const MusicVoiceControls: React.FC = () => {
                 min="0"
                 max="100"
                 value={volume}
-                onChange={(e) => setVolume(Number(e.target.value))}
+                onChange={(e) => handleVolumeChange(Number(e.target.value))}
                 className="w-full accent-[#ff9b45] cursor-pointer"
               />
               <span className="text-xs font-mono text-[#7d8b9f] w-9 tabular-nums text-right">

@@ -9,16 +9,23 @@ import {
   Sparkles,
   Terminal,
   Volume2,
-  RefreshCw,
+  AlertOctagon,
   Laugh,
-  Flame
+  Flame,
+  Heart,
+  Mic2
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 interface SolverAndScaresProps {
   onTriggerGlitch: () => void;
+  onAddFriendshipPoint?: () => void;
 }
 
-export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitch }) => {
+export const SolverAndScares: React.FC<SolverAndScaresProps> = ({
+  onTriggerGlitch,
+  onAddFriendshipPoint
+}) => {
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<string>("Choose an action, Superstar. Freddy is primed and ready.");
   const [resultStatus, setResultStatus] = useState<'ok' | 'glitch' | 'danger'>('ok');
@@ -28,6 +35,24 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
   ]);
 
   const actions = [
+    {
+      name: 'Lockdown Announcement',
+      id: 'lockdown',
+      icon: AlertOctagon,
+      desc: 'Real voice: "Shut your mouth, I\'m listening to music!"',
+      color: 'from-[#ef4444] to-[#991b1b]',
+      type: 'voice audio',
+      isRealAudio: true
+    },
+    {
+      name: 'Superstar Greeting',
+      id: 'greeting',
+      icon: Mic2,
+      desc: 'Real voice: "Way to go, superstar! I knew you could do it."',
+      color: 'from-[#53e7ff] to-[#0284c7]',
+      type: 'voice audio',
+      isRealAudio: true
+    },
     {
       name: 'Reality Glitch',
       id: 'reality glitch',
@@ -42,7 +67,7 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
       icon: Sparkles,
       desc: 'Phase-shift Freddy to a new Pizzaplex zone',
       color: 'from-[#53e7ff] to-[#0ea5e9]',
-      type: 'ok'
+      type: 'solver'
     },
     {
       name: 'Solver Shield',
@@ -50,14 +75,14 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
       icon: ShieldAlert,
       desc: 'Deploy golden geometric deflection hex-barrier',
       color: 'from-[#eab308] to-[#f97316]',
-      type: 'ok'
+      type: 'solver'
     },
     {
       name: 'System Override',
       id: 'system override',
       icon: Terminal,
       desc: 'Bypass Fazbear safety lockouts and restrictions',
-      color: 'from-[#ef4444] to-[#b91c1c]',
+      color: 'from-[#f59e0b] to-[#d97706]',
       type: 'danger'
     },
     {
@@ -72,9 +97,25 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
       name: 'Classic Jumpscare',
       id: 'jumpscare',
       icon: Flame,
-      desc: 'Classic security camera animatronic scream',
+      desc: 'Security camera static animatronic scream',
       color: 'from-[#ff9b45] to-[#ea580c]',
-      type: 'danger'
+      type: 'scare'
+    },
+    {
+      name: 'Playful Roast',
+      id: 'roast',
+      icon: Flame,
+      desc: 'Playful banter from your superstar bear',
+      color: 'from-[#ec4899] to-[#be185d]',
+      type: 'dialogue'
+    },
+    {
+      name: 'Bear Hug',
+      id: 'hug',
+      icon: Heart,
+      desc: 'Warm hug (+1 Friendship Point)',
+      color: 'from-[#f43f5e] to-[#fb7185]',
+      type: 'friendship'
     },
     {
       name: 'Freddy Roar',
@@ -82,7 +123,7 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
       icon: Volume2,
       desc: 'Massive vocal resonance acoustic boom',
       color: 'from-[#3b82f6] to-[#6366f1]',
-      type: 'ok'
+      type: 'audio'
     },
     {
       name: 'Tell Me A Joke',
@@ -90,7 +131,7 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
       icon: Laugh,
       desc: 'Freddy’s trademark protective dad humor',
       color: 'from-[#10b981] to-[#059669]',
-      type: 'ok'
+      type: 'dialogue'
     }
   ];
 
@@ -99,11 +140,21 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
     setIsProcessing(true);
     setActionResult(`Executing ${actionName}...`);
 
-    // Audio synthesizer effect
+    // Audio synthesizer effect / real MP3 audio playback
     soundEngine.playActionSound(actionId);
 
+    if (actionId === 'hug' && onAddFriendshipPoint) {
+      onAddFriendshipPoint();
+      confetti({
+        particleCount: 30,
+        spread: 50,
+        origin: { y: 0.7 },
+        colors: ['#ff9b45', '#53e7ff', '#f43f5e']
+      });
+    }
+
     // Screen glitch for high-intensity actions
-    if (actionId.includes('glitch') || actionId.includes('jumpscare') || actionId.includes('override')) {
+    if (actionId.includes('glitch') || actionId.includes('jumpscare') || actionId.includes('override') || actionId === 'lockdown') {
       onTriggerGlitch();
     }
 
@@ -153,7 +204,7 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
             <span>🔺 Absolute Solver & Scares</span>
           </h2>
           <p className="text-xs text-[#aab6c9] mt-1">
-            Dispatch diagnostic commands, reality distortion events, and soundboard animatronic reactions to the connected bot.
+            Dispatch diagnostic commands, authentic voice audio clips, reality distortion events, and animatronic soundboard reactions.
           </p>
         </div>
 
@@ -165,9 +216,9 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
 
       {/* Grid: Action Grid & Live Terminal Monitor */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: 8 Action Trigger Buttons */}
+        {/* Left Column: Action Trigger Buttons */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {actions.map((act) => {
               const Icon = act.icon;
               const isSelected = activeAction === act.id;
@@ -176,17 +227,19 @@ export const SolverAndScares: React.FC<SolverAndScaresProps> = ({ onTriggerGlitc
                   key={act.id}
                   onClick={() => handleTriggerAction(act.id, act.name)}
                   disabled={isProcessing}
-                  className={`p-4 rounded-xl text-left border transition-all cursor-pointer relative overflow-hidden group ${
+                  className={`p-3.5 rounded-xl text-left border transition-all cursor-pointer relative overflow-hidden group ${
                     isSelected
                       ? 'border-[#53e7ff] bg-[#1a293d] shadow-lg shadow-[#53e7ff]/20'
                       : 'border-white/10 bg-[#121c2c] hover:border-white/30 hover:bg-[#152336]'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${act.color} text-black font-bold flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${act.color} text-black font-bold flex items-center justify-center group-hover:scale-110 transition-transform shadow-md`}>
                       <Icon className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-[10px] font-mono text-[#7d8b9f] uppercase tracking-wider">
+                    <span className={`text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                      act.isRealAudio ? 'bg-[#ff9b45]/20 text-[#ff9b45] font-bold' : 'text-[#7d8b9f] bg-white/5'
+                    }`}>
                       {act.type}
                     </span>
                   </div>

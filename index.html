@@ -12,6 +12,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script>
+      // Ignore WebSocket / HMR disconnect errors in iframe per environment constraints
+      window.addEventListener('unhandledrejection', function(event) {
+        var reason = event.reason;
+        var msg = (reason && (reason.message || String(reason))) || '';
+        if (msg.includes('WebSocket') || msg.includes('closed without opened') || msg.includes('vite:ws')) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      });
+      window.addEventListener('error', function(event) {
+        var msg = event.message || '';
+        if (msg.includes('WebSocket') || msg.includes('closed without opened') || msg.includes('vite:ws')) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      });
+    </script>
   </head>
   <body class="bg-[#090d16] text-[#f5f7fb] min-h-screen selection:bg-[#53e7ff]/30 selection:text-white font-sans antialiased">
     <div id="root"></div>
