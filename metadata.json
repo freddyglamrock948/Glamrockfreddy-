@@ -1,0 +1,6 @@
+{
+  "name": "Glamrock Freddy · Pizzaplex Console & Bot Bridge",
+  "description": "Interactive dashboard and Discord bot bridge for Glamrock Freddy. Manage welcome and goodbye embeds, trigger Absolute Solver glitches, chat with Freddy, and control music.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

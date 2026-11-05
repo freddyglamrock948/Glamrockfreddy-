@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --color-pizzaplex-dark: #090d16;
+  --color-pizzaplex-card: #121c2c;
+  --color-pizzaplex-cyan: #53e7ff;
+  --color-pizzaplex-orange: #ff9b45;
+  --color-pizzaplex-purple: #9d4edd;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #090d16;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(24, 42, 67, 0.8) 0%, rgba(9, 13, 22, 1) 60%),
+    radial-gradient(circle at 100% 20%, rgba(83, 231, 255, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 0% 50%, rgba(255, 155, 69, 0.05) 0%, transparent 40%);
+}
+
+@keyframes glitch-anim {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 3px); filter: hue-rotate(90deg); }
+  40% { transform: translate(-3px, -3px); filter: invert(0.2); }
+  60% { transform: translate(3px, 3px); filter: contrast(1.4); }
+  80% { transform: translate(3px, -3px); filter: hue-rotate(-90deg); }
+  100% { transform: translate(0); }
+}
+
+.glitch-active {
+  animation: glitch-anim 0.25s infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+.scanline-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(83, 231, 255, 0.1) 50%,
+    rgba(255,255,255,0)
+  );
+  background-size: 100% 4px;
+}
