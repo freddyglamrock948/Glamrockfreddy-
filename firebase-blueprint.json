@@ -1,0 +1,17 @@
+{
+  "entities": {
+    "PizzaplexContact": {
+      "collection": "pizzaplex_contacts",
+      "fields": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "role": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "source": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

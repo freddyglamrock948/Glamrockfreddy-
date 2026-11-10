@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pizzaplex Superstar VIP Contacts & Guestbook
+    match /pizzaplex_contacts/{contactId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    // Bot settings and activity logs
+    match /bot_settings/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

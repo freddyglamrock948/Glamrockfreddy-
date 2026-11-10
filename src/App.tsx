@@ -6,6 +6,9 @@ import { FreddyChat } from './components/FreddyChat';
 import { SolverAndScares } from './components/SolverAndScares';
 import { MusicVoiceControls } from './components/MusicVoiceControls';
 import { ServerBotBridge } from './components/ServerBotBridge';
+import { SystemLogPanel } from './components/SystemLogPanel';
+import { ContactsManager } from './components/ContactsManager';
+import { DiscordServersList } from './components/DiscordServersList';
 import {
   DEFAULT_SETTINGS,
   DEFAULT_OWNERS,
@@ -222,6 +225,18 @@ export default function App() {
         {activeTab === 'bridge' && (
           <ServerBotBridge />
         )}
+
+        {activeTab === 'servers' && (
+          <DiscordServersList />
+        )}
+
+        {activeTab === 'logs' && (
+          <SystemLogPanel />
+        )}
+
+        {activeTab === 'contacts' && (
+          <ContactsManager />
+        )}
       </main>
 
       {/* Clean Footer */}
@@ -270,6 +285,27 @@ export default function App() {
               className="hover:text-[#53e7ff] transition-colors cursor-pointer"
             >
               Bridge
+            </button>
+            <span aria-hidden="true">·</span>
+            <button
+              onClick={() => setActiveTab('servers')}
+              className="hover:text-[#53e7ff] transition-colors cursor-pointer"
+            >
+              Servers
+            </button>
+            <span aria-hidden="true">·</span>
+            <button
+              onClick={() => setActiveTab('logs')}
+              className="hover:text-[#53e7ff] transition-colors cursor-pointer"
+            >
+              System Logs
+            </button>
+            <span aria-hidden="true">·</span>
+            <button
+              onClick={() => setActiveTab('contacts')}
+              className="hover:text-[#53e7ff] transition-colors cursor-pointer"
+            >
+              VIP Contacts
             </button>
           </div>
         </div>

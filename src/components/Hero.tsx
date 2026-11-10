@@ -42,29 +42,38 @@ export const Hero: React.FC<HeroProps> = ({
 
             {/* CTAs */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
+              <a
+                href="https://discord.com/oauth2/authorize?client_id=1548483188203065357&permissions=3148800&scope=bot%20applications.commands"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="px-6 py-3.5 rounded-xl font-bold text-sm bg-[#5865f2] hover:bg-[#4752c4] text-white transition-all shadow-lg shadow-[#5865f2]/30 flex items-center gap-2 cursor-pointer"
+              >
+                <span>Invite Freddy to Server</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+
               {isLoggedIn ? (
                 <button
                   onClick={onOpenDashboard}
-                  className="px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[#ff9b45] to-[#ff8020] text-black hover:brightness-110 transition-all shadow-lg shadow-[#ff9b45]/20 flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[#ff9b45] to-[#ff8020] text-black hover:brightness-110 transition-all shadow-lg shadow-[#ff9b45]/20 flex items-center gap-2 cursor-pointer"
                 >
-                  <span>Open Console Dashboard</span>
+                  <span>Open Console</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               ) : (
                 <>
                   <button
                     onClick={onLoginClick}
-                    className="px-6 py-3.5 rounded-xl font-bold text-sm bg-[#5865f2] hover:bg-[#4752c4] text-white transition-all shadow-lg shadow-[#5865f2]/25 flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-3.5 rounded-xl font-bold text-sm text-white border border-white/20 hover:border-white/40 transition-colors flex items-center gap-2 cursor-pointer"
                   >
-                    <span>Log in with Discord</span>
-                    <ExternalLink className="w-4 h-4" />
+                    <span>Owner Login</span>
                   </button>
 
                   <button
                     onClick={onSimulateOwner}
-                    className="px-5 py-3.5 rounded-xl font-bold text-sm text-[#53e7ff] border border-[#53e7ff]/40 hover:bg-[#53e7ff]/10 transition-colors flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-3.5 rounded-xl font-bold text-sm text-[#53e7ff] border border-[#53e7ff]/40 hover:bg-[#53e7ff]/10 transition-colors flex items-center gap-2 cursor-pointer"
                   >
-                    <span>Try Interactive Demo</span>
+                    <span>Demo Mode</span>
                   </button>
                 </>
               )}
@@ -99,7 +108,7 @@ export const Hero: React.FC<HeroProps> = ({
                 </div>
                 <div className="text-right">
                   <div className="text-[11px] text-[#ff9b45] font-mono tabular-nums font-bold">FAZBEAR 1.0.8</div>
-                  <div className="text-[10px] text-[#7d8b9f]">Pizzaplex Active</div>
+                  <div className="text-[10px] text-[#7d8b9f]">Status: Offline (Standby)</div>
                 </div>
               </div>
             </div>

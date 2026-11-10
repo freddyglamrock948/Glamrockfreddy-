@@ -26,13 +26,24 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-[#090d16]/90 backdrop-blur-md border-b border-[#ffffff15] px-6 py-3.5 flex items-center justify-between gap-8 transition-colors">
-      {/* Zone 1: Single Text Element Wordmark */}
-      <button
-        onClick={() => onTabChange('hero')}
-        className="text-left font-black tracking-wider text-white text-lg whitespace-nowrap shrink-0 hover:opacity-90 transition-opacity"
-      >
-        ★ GLAMROCK <span className="text-[#ff9b45]">FREDDY</span>
-      </button>
+      {/* Zone 1: Wordmark with Live System Status Indicator */}
+      <div className="flex items-center gap-3 shrink-0">
+        <button
+          onClick={() => onTabChange('hero')}
+          className="text-left font-black tracking-wider text-white text-lg whitespace-nowrap shrink-0 hover:opacity-90 transition-opacity"
+        >
+          ★ GLAMROCK <span className="text-[#ff9b45]">FREDDY</span>
+        </button>
+
+        <button
+          onClick={() => onTabChange('bridge')}
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all cursor-pointer"
+          title="Freddy Pizzaplex Console is active. Click to manage Discord Gateway bridge."
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Console: Online</span>
+        </button>
+      </div>
 
       {/* Zone 2: 5 Concise Single-line Navigation Links */}
       <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-[#aab6c9]">
@@ -79,6 +90,33 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           Bot Bridge
+        </button>
+
+        <button
+          onClick={() => onTabChange('servers')}
+          className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
+            activeTab === 'servers' ? 'text-[#53e7ff] underline underline-offset-8 decoration-2' : ''
+          }`}
+        >
+          Servers
+        </button>
+
+        <button
+          onClick={() => onTabChange('logs')}
+          className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
+            activeTab === 'logs' ? 'text-[#53e7ff] underline underline-offset-8 decoration-2' : ''
+          }`}
+        >
+          System Logs
+        </button>
+
+        <button
+          onClick={() => onTabChange('contacts')}
+          className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
+            activeTab === 'contacts' ? 'text-[#53e7ff] underline underline-offset-8 decoration-2' : ''
+          }`}
+        >
+          VIP Contacts
         </button>
       </nav>
 

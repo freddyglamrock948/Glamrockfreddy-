@@ -34,6 +34,8 @@ export const FreddyChat: React.FC<FreddyChatProps> = ({
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   const quickPrompts = [
+    { label: "🎄 Christmas Freddy!", prompt: "Christmas Freddy!" },
+    { label: "🎅 Freddy, calm down", prompt: "Freddy, calm down." },
     { label: "🤗 Hug Freddy (+1 Point)", prompt: "Can I have a hug, Freddy?" },
     { label: "👦 Who is Gregory?", prompt: "Freddy, tell me about your son Gregory." },
     { label: "🎀 Who is Cyn?", prompt: "Who is Cyn to you, Freddy?" },
@@ -51,7 +53,7 @@ export const FreddyChat: React.FC<FreddyChatProps> = ({
     if (!textToSend.trim()) return;
 
     const userMsg: Message = {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       sender: 'user',
       text: textToSend.trim(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -88,7 +90,7 @@ export const FreddyChat: React.FC<FreddyChatProps> = ({
         setMessages((prev) => [
           ...prev,
           {
-            id: (Date.now() + 1).toString(),
+            id: `freddy-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
             sender: 'freddy',
             text: replyText,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -102,7 +104,7 @@ export const FreddyChat: React.FC<FreddyChatProps> = ({
         setMessages((prev) => [
           ...prev,
           {
-            id: (Date.now() + 1).toString(),
+            id: `freddy-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
             sender: 'freddy',
             text: replyText,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -118,7 +120,7 @@ export const FreddyChat: React.FC<FreddyChatProps> = ({
     soundEngine.playActionSound('default');
 
     const roleplayMsg: Message = {
-      id: Date.now().toString(),
+      id: `roleplay-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       sender: 'freddy',
       text: `🎮 [ROLEPLAY: ${scene.title.toUpperCase()}]\n\n${scene.text}`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -244,11 +246,11 @@ export const FreddyChat: React.FC<FreddyChatProps> = ({
 
       {/* Messages Scroll View */}
       <div className="flex-1 overflow-y-auto py-4 space-y-3.5 pr-1">
-        {messages.map((msg) => {
+        {messages.map((msg, idx) => {
           const isFreddy = msg.sender === 'freddy';
           return (
             <div
-              key={msg.id}
+              key={`chat-msg-${msg.id}-${idx}`}
               className={`flex items-start gap-3 ${isFreddy ? 'justify-start' : 'justify-end'}`}
             >
               {isFreddy && (
@@ -311,13 +313,28 @@ export const FreddyChat: React.FC<FreddyChatProps> = ({
         <div ref={chatBottomRef} />
       </div>
 
+      {/* Quick @ Mention Chips */}
+      <div className="flex items-center gap-1.5 pt-2 pb-1 overflow-x-auto text-[11px]">
+        <span className="text-[#7d8b9f] text-[10px] font-mono shrink-0">Mention with @:</span>
+        {['@Freddy', '@Gregory', '@Cyn', '@Superstar'].map((tag) => (
+          <button
+            key={tag}
+            type="button"
+            onClick={() => setInput((prev) => (prev ? `${prev} ${tag}` : `${tag} `))}
+            className="px-2 py-0.5 rounded-full bg-[#1e2f46] hover:bg-[#53e7ff]/20 text-[#53e7ff] border border-[#53e7ff]/30 transition-colors cursor-pointer shrink-0"
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+
       {/* Input Form */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           handleSend();
         }}
-        className="pt-3 border-t border-white/10 flex items-center gap-2"
+        className="pt-2 border-t border-white/10 flex items-center gap-2"
       >
         <input
           type="text"
